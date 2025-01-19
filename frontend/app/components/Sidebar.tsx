@@ -8,6 +8,7 @@ import { REMOVE_FAVORITE_TOKEN } from '../graphql/mutations/removeFavoriteToken'
 import { motion, AnimatePresence } from 'framer-motion'
 import { StarIcon } from '@heroicons/react/24/solid'
 import { useWallet } from '@solana/wallet-adapter-react'
+import { Button } from "../../components/ui/button"
 
 export default function Sidebar({ favorites }: { favorites: Token[] }) {
   const { publicKey } = useWallet()
@@ -80,9 +81,9 @@ export default function Sidebar({ favorites }: { favorites: Token[] }) {
                     /> : <QuestionMarkCircleIcon className="w-6 h-6 mr-2 text-gray-400" />}
                     <span className="font-semibold">{token.symbol}</span>
                   </div>
-                  <button onClick={() => handleUnfavorite(token.address)} className="focus:outline-none">
+                  <Button variant="ghost" size="icon" onClick={() => handleUnfavorite(token.address)}>
                     <StarIcon className="w-6 h-6 text-purple-400 fill-current" />
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex mt-1 justify-between">
                   <span className="text-sm">{formatPrice(token.price)}</span>

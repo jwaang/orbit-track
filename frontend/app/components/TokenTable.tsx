@@ -17,10 +17,14 @@ import { StarIcon } from '@heroicons/react/24/outline'
 import { REMOVE_FAVORITE_TOKEN } from '../graphql/mutations/removeFavoriteToken'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 import { useIsMobile } from '../../hooks/use-mobile'
+import { useToast } from "../../hooks/use-toast"
+import { Input } from "../../components/ui/input"
+import { Button } from "../../components/ui/button"
 
 const API_LIMIT = 10
 
 export default function TokenTable({ publicKey, isFavorites }: { publicKey: string, isFavorites?: boolean }) {
+  const { toast } = useToast()
   const isMobile = useIsMobile()
   const [page, setPage] = useState(1)
   const [allTokens, setAllTokens] = useState<Token[]>([])
@@ -72,6 +76,13 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
   ) || []
 
   const handleFavoriteClick = async (address: string, isFavorited: boolean) => {
+    if (favoritedTokens.length >= 30) {
+      toast({
+        title: "You can only have 30 favorites",
+        description: "Please remove some favorites to add a new one",
+      })
+      return
+    }
     try {
       const mutation = isFavorited ? removeFavoriteToken : addFavoriteToken
       await mutation({ variables: { tokenAddress: address, publicKey } })
@@ -168,14 +179,9 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
         const address = row.getValue("address") as string
         return (
           <div className="whitespace-nowrap">
-            <a
-              href={`https://solscan.io/token/${address}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-purple-400 hover:text-purple-300"
-            >
+            <Button variant="link" size="sm" onClick={() => window.open(`https://solscan.io/token/${address}`, '_blank')} className="text-purple-400 hover:text-purple-300">
               {`${address.slice(0, 6)}...${address.slice(-4)}`}
-            </a>
+            </Button>
           </div>
         )
       }
@@ -190,7 +196,7 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
         return <>
           {publicKey &&
             <div className="whitespace-nowrap">
-              <button onClick={() => handleFavoriteClick(address as string, isFavorited)} className="focus:outline-none relative">
+              <Button variant="ghost" size="icon" onClick={() => handleFavoriteClick(address as string, isFavorited)} className="relative">
                 <AnimatePresence presenceAffectsLayout={false}>
                   {isFavorited && (
                     <motion.div
@@ -199,7 +205,7 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
                       animate={{ scale: 1 }}
                       exit={{ scale: 0 }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="absolute inset-0"
+                      className="absolute"
                     >
                       <StarIcon className="w-6 h-6 text-purple-400 fill-current" />
                     </motion.div>
@@ -210,9 +216,11 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
                   animate={{ rotate: isFavorited ? 360 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <StarIcon className={`w-6 h-6 ${isFavorited ? 'text-purple-400' : 'text-gray-400 group-hover:text-purple-300'}`} />
+                  <Button variant="ghost" size="icon">
+                    <StarIcon className={`w-6 h-6 ${isFavorited ? 'text-purple-400 fill-current' : 'text-gray-400 group-hover:text-purple-300'}`} />
+                  </Button>
                 </motion.div>
-              </button>
+              </Button>
             </div>
           }
         </>
@@ -223,10 +231,10 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
   return (
     <div className="flex flex-col">
       <div className="sticky top-0 bg-gray-900 z-10 p-4 -mx-4">
-        <input
+        <Input
           type="text"
           placeholder="Search by symbol or address"
-          className="w-full p-2 border rounded bg-gray-800 text-white border-gray-700 focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50"
+          className="w-full p-2 border rounded bg-gray-800 text-white border-gray-700"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -245,7 +253,12 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
               isLoading={loading || isLoadingMore}
               trendingPools={isFavorites ? null : data?.trendingPools}
               onLoadMore={() => {
-                if (page < API_LIMIT) {
+                if (page === API_LIMIT - 1) {
+                  toast({
+                    title: "You're all caught up! 🎉",
+                    description: "You've seen all the available tokens for now. Check back later for updates!",
+                  })
+                } else if (page < API_LIMIT) {
                   const nextPage = page + 1;
                   setIsLoadingMore(true);
                   setPage(nextPage);

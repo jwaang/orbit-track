@@ -16,10 +16,12 @@ import { AnimatePresence } from 'framer-motion'
 import { StarIcon } from '@heroicons/react/24/outline'
 import { REMOVE_FAVORITE_TOKEN } from '../graphql/mutations/removeFavoriteToken'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
+import { useIsMobile } from '../../hooks/use-mobile'
 
 const API_LIMIT = 10
 
 export default function TokenTable({ publicKey, isFavorites }: { publicKey: string, isFavorites?: boolean }) {
+  const isMobile = useIsMobile()
   const [page, setPage] = useState(1)
   const [allTokens, setAllTokens] = useState<Token[]>([])
   const [search, setSearch] = useState('')
@@ -239,7 +241,7 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
             <DataTable
               columns={columns}
               data={filteredTokens}
-              height={`calc(100vh - ${window.innerWidth <= 768 ? '225px' : '155px'})`}
+              height={`calc(100vh - ${isMobile ? '225px' : '155px'})`}
               isLoading={loading || isLoadingMore}
               trendingPools={isFavorites ? null : data?.trendingPools}
               onLoadMore={() => {

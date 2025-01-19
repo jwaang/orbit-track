@@ -3,24 +3,14 @@
 import Link from 'next/link'
 import { Orbit } from 'lucide-react'
 import Ripple from "../components/ui/ripple";
-import { useState, useEffect } from 'react'
 import { ShimmerButton } from "../components/ui/shimmer-button";
 import { motion } from "framer-motion";
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useIsMobile } from '../hooks/use-mobile'
 
 export default function HomePage() {
   const { publicKey, connected } = useWallet()
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+  const isMobile = useIsMobile()
 
   const container = {
     hidden: { opacity: 0 },

@@ -208,13 +208,17 @@ const resolvers = {
 const trendingPoolsCache = new Map();
 
 export default async function (fastify, opts) {
+  fastify.get('/health', async (request, reply) => {
+    return { status: 'ok' };
+  });
+
   await fastify.register(cors, {
     origin: true,
     methods: ['GET', 'POST', 'OPTIONS']
   })
 
   await fastify.register(fastifyPostgres, {
-    connectionString: 'postgresql://postgres@localhost:5432/postgres'
+    connectionString: process.env.DATABASE_URL
   })
 
   await fastify.register(mercurius, {

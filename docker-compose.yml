@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database_migration.sql:/docker-entrypoint-initdb.d/database_migration.sql
+    networks:
+      - orbit-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+    depends_on:
+      db:
+        condition: service_started
+    networks:
+      - orbit-network
+    healthcheck:
+      test: curl --fail http://localhost:4000/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_GRAPHQL_URL=http://backend:4000
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - orbit-network
+
+networks:
+  orbit-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  node_modules:
+  next-cache:

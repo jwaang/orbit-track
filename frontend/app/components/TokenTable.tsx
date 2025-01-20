@@ -247,6 +247,7 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
             transition={{ duration: 0.5 }}
           >
             <DataTable
+              isFavorites={isFavorites}
               columns={columns}
               data={filteredTokens}
               height={`calc(100vh - ${isMobile ? '225px' : '155px'})`}

@@ -78,6 +78,7 @@ interface DataTableProps<TData, TValue> {
     isLoading?: boolean;
     onLoadMore?: () => void;
     trendingPools: TrendingPools;
+    isFavorites?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -87,6 +88,7 @@ export function DataTable<TData, TValue>({
     isLoading,
     onLoadMore,
     trendingPools,
+    isFavorites,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = useState<SortingState>([{ id: 'marketCap', desc: true }]);
     const table = useReactTable({
@@ -133,7 +135,7 @@ export function DataTable<TData, TValue>({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                     >
-                        No tokens found 😔
+                        {isFavorites ? "No tokens favorited" : "No tokens found 😔"}
                     </motion.div>
                 </div>
             </TableCell>

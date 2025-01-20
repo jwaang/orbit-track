@@ -6,6 +6,7 @@
 # Next.js specific
 **/.next
 **/out
+**/.swc
 
 # Build outputs
 **/build

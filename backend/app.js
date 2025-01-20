@@ -1,7 +1,8 @@
 import mercurius from 'mercurius'
 import fastifyPostgres from '@fastify/postgres'
-import fetch from 'node-fetch'
 import cors from '@fastify/cors'
+import Fastify from 'fastify'
+import app from './app.js'
 
 const schema = `
   type User {
@@ -51,7 +52,7 @@ const resolvers = {
   Query: {
     trendingPools: async (_, { page = 1 }) => {
       try {
-        const response = await fetch(`https://api.geckoterminal.com/api/v2/networks/solana/trending_pools?include=base_token&page=${page}`);
+        const response = await global.fetch(`https://api.geckoterminal.com/api/v2/networks/solana/trending_pools?include=base_token&page=${page}`);
         if (!response.ok) {
           throw new Error(`API request failed with status ${response.status}`);
         }
@@ -110,12 +111,11 @@ const resolvers = {
     },
     getMultipleTokens: async (_, { tokenAddresses }) => {
       const addressesString = tokenAddresses.join(',');
-      const response = await fetch(`https://api.geckoterminal.com/api/v2/networks/solana/tokens/multi/${addressesString}?include=top_pools`);
+      const response = await global.fetch(`https://api.geckoterminal.com/api/v2/networks/solana/tokens/multi/${addressesString}?include=top_pools`);
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}`);
       }
       const data = await response.json();
-      console.log(data)
 
       return data.data.map(token => {
         // Find the associated pool to find priceChange value
@@ -205,8 +205,6 @@ const resolvers = {
   }
 }
 
-const trendingPoolsCache = new Map();
-
 export default async function (fastify, opts) {
   fastify.get('/health', async (request, reply) => {
     return { status: 'ok' };
@@ -217,9 +215,20 @@ export default async function (fastify, opts) {
     methods: ['GET', 'POST', 'OPTIONS']
   })
 
-  await fastify.register(fastifyPostgres, {
-    connectionString: process.env.DATABASE_URL
-  })
+  // Only register postgres if it hasn't been decorated yet
+  if (!fastify.hasDecorator('pg')) {
+    if (!opts.postgres) {
+      await fastify.register(fastifyPostgres, {
+        connectionString: process.env.DATABASE_URL || 'postgresql://postgres@localhost:5432/postgres',
+        ssl: {
+          rejectUnauthorized: false
+        }
+      });
+    } else {
+      // Decorate fastify with the mock DB
+      fastify.decorate('pg', opts.postgres);
+    }
+  }
 
   await fastify.register(mercurius, {
     schema,
@@ -232,4 +241,13 @@ export default async function (fastify, opts) {
       }
     }
   })
+}
+
+export async function buildServer(opts = {}) {
+  const fastify = Fastify();
+
+  // Register main application plugin with provided options
+  await fastify.register(app, opts);
+
+  return fastify;
 }

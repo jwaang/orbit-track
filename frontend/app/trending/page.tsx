@@ -44,7 +44,14 @@ export default function TrendingPage() {
   if (error) {
     return (
       <Layout favorites={favoritedTokens}>
-        <div className="text-red-500">Error loading trending tokens: {error.message}</div>
+        <div className="flex flex-col items-center justify-center p-8 text-center">
+          <div className="text-red-500 font-medium text-lg mb-2">
+            Oops! We had trouble loading the trending tokens
+          </div>
+          <div className="text-gray-400">
+            Please try refreshing the page. If the problem persists, check back later.
+          </div>
+        </div>
       </Layout>
     )
   }

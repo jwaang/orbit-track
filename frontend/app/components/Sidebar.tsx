@@ -1,21 +1,20 @@
+'use client'
+
 import { Token } from '../../types/Token'
 import Image from 'next/image'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
-import { useMutation, useQuery } from '@apollo/client'
-import { GET_MULTIPLE_TOKENS } from '../graphql/queries/getMultipleTokens'
+import { useMutation } from '@apollo/client'
 import { FAVORITES_BY_USER } from '../graphql/queries/favoritesByUser'
 import { REMOVE_FAVORITE_TOKEN } from '../graphql/mutations/removeFavoriteToken'
 import { motion, AnimatePresence } from 'framer-motion'
 import { StarIcon } from '@heroicons/react/24/solid'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Button } from "../../components/ui/button"
+import { useFavorite } from '../../hooks/use-favorite'
 
-export default function Sidebar({ favorites }: { favorites: Token[] }) {
+export default function Sidebar() {
   const { publicKey } = useWallet()
-  const { data, loading } = useQuery(GET_MULTIPLE_TOKENS, {
-    variables: { tokenAddresses: favorites },
-    skip: favorites.length === 0
-  })
+  const { favoritedTokensData, favoritedTokensLoading } = useFavorite()
 
   const [removeFavoriteToken] = useMutation(REMOVE_FAVORITE_TOKEN, {
     refetchQueries: [
@@ -47,14 +46,14 @@ export default function Sidebar({ favorites }: { favorites: Token[] }) {
   return (
     <div className="w-64 bg-gray-800 hidden lg:block right-0 top-0 bottom-0 overflow-y-auto border-l border-gray-700">
       <h2 className="text-xl font-bold p-4 sticky top-0 bg-gray-800 py-2 text-purple-400">Your Favorites 🚀</h2>
-      {loading ? (
+      {favoritedTokensLoading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
         </div>
       ) : (
         <ul className="divide-y divide-gray-700 h-[calc(100vh-126px)] overflow-y-auto">
           <AnimatePresence mode="popLayout">
-            {data?.getMultipleTokens?.length > 0 ? data.getMultipleTokens.map((token: Token) => (
+            {favoritedTokensData?.getMultipleTokens?.length > 0 ? favoritedTokensData.getMultipleTokens.map((token: Token) => (
               <motion.li
                 key={token.address}
                 className="p-4 hover:bg-gray-700"

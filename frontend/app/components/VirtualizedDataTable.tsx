@@ -125,21 +125,17 @@ export function DataTable<TData, TValue>({
         );
     };
 
-    const renderEmptyState = () => {
-        return <TableRow className="border-b border-gray-800 hover:bg-gray-800 data-[state=selected]:bg-muted">
-            <TableCell colSpan={columns.length} className="h-24">
-                <div className="flex justify-center items-center w-full">
-                    <motion.div
-                        className="text-center text-gray-400 py-4 text-xl"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                    >
-                        {isFavorites ? "No tokens favorited" : "No tokens found 😔"}
-                    </motion.div>
-                </div>
-            </TableCell>
-        </TableRow>
+    if (rows.length === 0) {
+        return <div className="flex justify-center items-center w-full">
+            <motion.div
+                className="text-center text-gray-400 py-4 text-xl"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                No tokens found 😔
+            </motion.div>
+        </div>
     }
 
     return (
@@ -150,7 +146,8 @@ export function DataTable<TData, TValue>({
                 components={{
                     Table: TableComponent,
                     TableRow: TableRowComponent(rows),
-                    EmptyPlaceholder: renderEmptyState
+                    // EmptyPlaceholder causes hydration error
+                    // EmptyPlaceholder: renderEmptyState
                 }}
                 endReached={handleEndReached}
                 overscan={200}

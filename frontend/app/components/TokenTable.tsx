@@ -3,10 +3,8 @@
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { TRENDING_POOLS } from '../graphql/queries/trendingPools'
 import { useMutation, useQuery } from '@apollo/client'
 import { FAVORITES_BY_USER } from '../graphql/queries/favoritesByUser'
-import { GET_MULTIPLE_TOKENS } from '../graphql/queries/getMultipleTokens'
 import { Token } from '../../types/Token'
 import { FavoriteToken } from '../../types/FavoriteToken'
 import { DataTable } from './VirtualizedDataTable'
@@ -20,20 +18,31 @@ import { useIsMobile } from '../../hooks/use-mobile'
 import { useToast } from "../../hooks/use-toast"
 import { Input } from "../../components/ui/input"
 import { Button } from "../../components/ui/button"
+import { useWallet } from '@solana/wallet-adapter-react'
+import { CREATE_USER } from '../graphql/mutations/createUser'
+import { TrendingPoolsResponse } from '@/types/TrendingPools'
+import { TRENDING_POOLS } from '../graphql/queries/trendingPools'
+import { useFavorite } from '../../hooks/use-favorite'
 
 const API_LIMIT = 10
 
-export default function TokenTable({ publicKey, isFavorites }: { publicKey: string, isFavorites?: boolean }) {
+export default function TokenTable({ isFavorites, initialTrendingPools }: { isFavorites?: boolean, initialTrendingPools?: TrendingPoolsResponse }) {
+  const { favoritesByUserData, favoritedTokensData } = useFavorite()
+  const { publicKey, connected } = useWallet()
   const { toast } = useToast()
   const isMobile = useIsMobile()
   const [page, setPage] = useState(1)
   const [allTokens, setAllTokens] = useState<Token[]>([])
   const [search, setSearch] = useState('')
   const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const { data, loading, fetchMore } = useQuery(TRENDING_POOLS, {
-    variables: { page: 1 },
-    skip: isFavorites
+  const { data, loading, error, fetchMore } = useQuery(TRENDING_POOLS, {
+    variables: { page },
+    skip: isFavorites || page === 1
   })
+
+  const trendingPoolsData = data || initialTrendingPools;
+
+  const [createUser] = useMutation(CREATE_USER)
 
   const [addFavoriteToken] = useMutation(ADD_FAVORITE_TOKEN, {
     refetchQueries: [
@@ -52,24 +61,25 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
     ]
   })
 
-  const { data: favoritesByUserData } = useQuery(FAVORITES_BY_USER, {
-    variables: { publicKey },
-    skip: !publicKey
-  })
-
-  const { data: favoritedTokensData } = useQuery(GET_MULTIPLE_TOKENS, {
-    variables: { tokenAddresses: favoritesByUserData?.favoritesByUser?.map((fav: FavoriteToken) => fav.tokenAddress) || [] },
-    skip: !favoritesByUserData?.favoritesByUser?.length
-  })
+  useEffect(() => {
+    if (connected && publicKey) {
+      const storedPublicKey = localStorage.getItem('publicKey')
+      if (!storedPublicKey) {
+        createUser({ variables: { publicKey: publicKey.toString() } })
+          .then(() => localStorage.setItem('publicKey', publicKey.toString()))
+          .catch(error => console.error('User already exists:', error))
+      }
+    }
+  }, [connected, publicKey, createUser])
 
   useEffect(() => {
     // Update allTokens state when initial data loads - this sets the table data
     if (isFavorites) {
       setAllTokens(favoritedTokensData?.getMultipleTokens || [])
-    } else if (data?.trendingPools.pools) {
-      setAllTokens(data.trendingPools.pools)
+    } else if (trendingPoolsData?.trendingPools?.pools) {
+      setAllTokens(trendingPoolsData?.trendingPools?.pools)
     }
-  }, [data, favoritedTokensData, isFavorites])
+  }, [trendingPoolsData, favoritedTokensData, isFavorites])
 
   const favoritedTokens = favoritesByUserData?.favoritesByUser?.map(
     (favorite: FavoriteToken) => favorite.tokenAddress
@@ -228,6 +238,27 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
     }] : [])
   ];
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <div className="text-red-500 font-medium text-lg mb-2">
+          Oops! We had trouble loading the trending tokens
+        </div>
+        <div className="text-gray-400">
+          Please try refreshing the page. If the problem persists, check back later.
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col">
       <div className="sticky top-0 bg-gray-900 z-10 p-4 -mx-4">
@@ -251,8 +282,8 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
               columns={columns}
               data={filteredTokens}
               height={`calc(100vh - ${isMobile ? '225px' : '155px'})`}
-              isLoading={loading || isLoadingMore}
-              trendingPools={isFavorites ? null : data?.trendingPools}
+              isLoading={isLoadingMore}
+              trendingPools={isFavorites ? null : trendingPoolsData?.trendingPools}
               onLoadMore={() => {
                 if (page === API_LIMIT - 1) {
                   toast({
@@ -271,7 +302,7 @@ export default function TokenTable({ publicKey, isFavorites }: { publicKey: stri
                         trendingPools: {
                           ...fetchMoreResult.trendingPools,
                           pools: [
-                            ...prev.trendingPools.pools,
+                            ...(page === 1 ? initialTrendingPools?.trendingPools?.pools : prev.trendingPools.pools),
                             ...fetchMoreResult.trendingPools.pools
                           ]
                         }

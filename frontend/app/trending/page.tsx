@@ -1,64 +1,19 @@
-'use client'
-
 import Layout from '../components/Layout'
 import TokenTable from '../components/TokenTable'
-import { useQuery, useMutation } from '@apollo/client'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { useState, useEffect } from 'react'
 import { TRENDING_POOLS } from '../graphql/queries/trendingPools'
-import { CREATE_USER } from '../graphql/mutations/createUser'
-import { FAVORITES_BY_USER } from '../graphql/queries/favoritesByUser'
-import { FavoriteToken } from '../../types/FavoriteToken'
+import { getClient } from '../lib/apollo-server';
 
-export default function TrendingPage() {
-  const { publicKey, connected } = useWallet()
-  const [currentPage, setCurrentPage] = useState(1);
-  const { loading, error, data } = useQuery(TRENDING_POOLS, { variables: { page: currentPage } })
-  const [createUser] = useMutation(CREATE_USER)
+export default async function TrendingPage() {
+  const client = getClient();
 
-  const { data: favoritesByUser } = useQuery(FAVORITES_BY_USER, { variables: { publicKey: publicKey?.toString() }, skip: !publicKey })
-
-  useEffect(() => {
-    if (connected && publicKey) {
-      const storedPublicKey = localStorage.getItem('publicKey')
-      if (!storedPublicKey) {
-        createUser({ variables: { publicKey: publicKey.toString() } })
-          .then(() => localStorage.setItem('publicKey', publicKey.toString()))
-          .catch(error => console.error('User already exists:', error))
-      }
-    }
-  }, [connected, publicKey, createUser])
-
-  const favoritedTokens = (favoritesByUser?.favoritesByUser || []).map((fav: FavoriteToken) => fav.tokenAddress)
-
-  if (loading) {
-    return (
-      <Layout favorites={favoritedTokens}>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-        </div>
-      </Layout>
-    )
-  }
-
-  if (error) {
-    return (
-      <Layout favorites={favoritedTokens}>
-        <div className="flex flex-col items-center justify-center p-8 text-center">
-          <div className="text-red-500 font-medium text-lg mb-2">
-            Oops! We had trouble loading the trending tokens
-          </div>
-          <div className="text-gray-400">
-            Please try refreshing the page. If the problem persists, check back later.
-          </div>
-        </div>
-      </Layout>
-    )
-  }
+  const result = await client.query({
+    query: TRENDING_POOLS,
+    variables: { page: 1 },
+  });
 
   return (
-    <Layout favorites={favoritedTokens}>
-      <TokenTable publicKey={publicKey?.toString() || ''} />
+    <Layout>
+      <TokenTable initialTrendingPools={result?.data} />
     </Layout>
   )
 }

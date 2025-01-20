@@ -1,10 +1,9 @@
 import Header from './Header'
 import Footer from './Footer'
-import Sidebar from './Sidebar'
-import { Token } from '../../types/Token'
 import { Toaster } from '../../components/ui/toaster'
+import Sidebar from './Sidebar'
 
-export default function Layout({ children, favorites }: { children: React.ReactNode, favorites?: Token[] }) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-white">
       <Header />
@@ -13,7 +12,7 @@ export default function Layout({ children, favorites }: { children: React.ReactN
           {children}
         </main>
         <Toaster />
-        {favorites && <Sidebar favorites={favorites} />}
+        <Sidebar />
       </div>
       <Footer />
     </div>

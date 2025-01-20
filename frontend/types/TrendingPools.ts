@@ -5,3 +5,7 @@ export interface TrendingPools {
     hasNextPage: boolean;
     currentPage: number;
 }
+
+export interface TrendingPoolsResponse {
+    trendingPools: TrendingPools;
+}

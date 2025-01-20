@@ -38,3 +38,29 @@ You can then access:
 
 - **Frontend** at [http://localhost:3000](http://localhost:3000)
 - **Backend** GraphQL endpoint at [http://localhost:4000/graphql](http://localhost:4000/graphql)
+
+---
+
+## Running Locally (without Docker)
+
+If you prefer developing locally without using Docker Compose, you can run each service independently:
+
+1. **Frontend Setup**
+
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+   This starts the Next.js frontend on [http://localhost:3000](http://localhost:3000).
+
+2. **Backend Setup** (in a separate terminal window)
+   ```bash
+   cd backend
+   npm install
+   npm run dev
+   ```
+   This starts the Fastify GraphQL server on [http://localhost:4000](http://localhost:4000).
+
+Both services will be running independently, allowing you to develop and test without containerization.

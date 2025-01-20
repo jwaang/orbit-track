@@ -55,12 +55,16 @@ Ensure you have the following installed before proceeding:
 
    - This service requires a PostgreSQL connection URL. Set the `DATABASE_URL` environment variable to your Postgres connection string, for example:
      ```bash
-     export DATABASE_URL="postgresql://user:password@localhost:5432/orbit_track_db"
+     export DATABASE_URL="postgresql://postgres@localhost:5432/postgres"
      ```
    - If `DATABASE_URL` is **not** provided, a default connection string defined in [`app.js`](./app.js) will be used:
      ```javascript
-     const dbUrl = process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/orbit_track_db';
+     const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres@localhost:5432/postgres';
      ```
+     - You may need to append `?sslmode=disable` to the connection URL to disable SSL verification:
+       ```
+       postgresql://postgres@localhost:5432/postgres?sslmode=disable
+       ```
 
 ---
 

@@ -2,6 +2,12 @@
 
 **Orbit Track** is a full-stack application composed of a frontend (Next.js) and a backend (Fastify GraphQL). This project provides real-time data on trending tokens, user management functionality, and favorite token tracking.
 
+## Demo
+
+https://github.com/user-attachments/assets/2654f583-c6d5-4fa7-ac6e-463279a89b30
+
+[![OrbitTrack Detailed Demo](https://img.youtube.com/vi/hkdfiLumP-s/0.jpg)](https://youtu.be/hkdfiLumP-s)
+
 ---
 
 ## Documentation

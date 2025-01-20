@@ -86,16 +86,19 @@ export default function TokenTable({ isFavorites, initialTrendingPools }: { isFa
   ) || []
 
   const handleFavoriteClick = async (address: string, isFavorited: boolean) => {
-    if (favoritedTokens.length >= 30) {
-      toast({
-        title: "You can only have 30 favorites",
-        description: "Please remove some favorites to add a new one",
-      })
-      return
-    }
     try {
-      const mutation = isFavorited ? removeFavoriteToken : addFavoriteToken
-      await mutation({ variables: { tokenAddress: address, publicKey } })
+      if (isFavorited) {
+        await removeFavoriteToken({ variables: { tokenAddress: address, publicKey } })
+        return
+      }
+      if (favoritedTokens.length >= 30) {
+        toast({
+          title: "You can only have 30 favorites",
+          description: "Please remove some favorites to add a new one",
+        })
+        return
+      }
+      await addFavoriteToken({ variables: { tokenAddress: address, publicKey } })
     } catch (error) {
       console.error('Error toggling favorite status:', error)
     }

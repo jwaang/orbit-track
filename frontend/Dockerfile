@@ -13,6 +13,7 @@ RUN npm run build
 FROM base as production
 WORKDIR /app
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_GRAPHQL_URL=http://backend:4000/graphql
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
@@ -27,5 +28,6 @@ CMD ["npm", "start"]
 
 FROM base as dev
 ENV NODE_ENV=development
+ENV NEXT_PUBLIC_GRAPHQL_URL=http://backend:4000/graphql
 COPY . .
 CMD ["npm", "run", "dev"]

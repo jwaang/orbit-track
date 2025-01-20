@@ -63,12 +63,13 @@ export default function TokenTable({ isFavorites, initialTrendingPools }: { isFa
 
   useEffect(() => {
     if (connected && publicKey) {
-      const storedPublicKey = localStorage.getItem('publicKey')
-      if (!storedPublicKey) {
-        createUser({ variables: { publicKey: publicKey.toString() } })
-          .then(() => localStorage.setItem('publicKey', publicKey.toString()))
-          .catch(error => console.error('User already exists:', error))
-      }
+      // TODO: Optimize user creation by implementing a store/localStorage check
+      // In development (Docker), the DB resets on restart, so we need different handling
+      // for dev vs prod environments
+      createUser({ variables: { publicKey: publicKey.toString() } })
+        .then(() => localStorage.setItem('publicKey', publicKey.toString()))
+        .catch(error => console.error('User already exists:', error))
+
     }
   }, [connected, publicKey, createUser])
 

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import Layout from '../components/Layout'
 import TokenTable from '../components/TokenTable'
 import { TRENDING_POOLS } from '../graphql/queries/trendingPools'

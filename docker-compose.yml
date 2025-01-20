@@ -21,7 +21,7 @@ services:
       - "4000:4000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres?sslmode=disable
     depends_on:
       db:
         condition: service_started
@@ -43,7 +43,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_GRAPHQL_URL=http://backend:4000
+      - NEXT_PUBLIC_GRAPHQL_URL=http://backend:4000/graphql
     depends_on:
       backend:
         condition: service_healthy

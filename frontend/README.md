@@ -184,13 +184,15 @@ frontend/
 This section details how users navigate throughout the Orbit Track Frontend and the logic that powers each route.
 
 ### `/` (Landing Page)
-
 - **Explore Button**: Always visible to guide users to explore trending tokens.
 - **Favorites Button**: Visible only on mobile **if** the user has connected their wallet.
 - **Purpose**: Serves as the main entry point to the application.
 
 ### `/trending` (Trending Tokens)
-
+- **Server Component**: This is the only page implemented as a **Next.js Server Component**. Its initial data fetch occurs server-side for the following reasons:
+  1. It doesn’t require user authentication or wallet connection.
+  2. The first page of data can be pre-fetched to improve performance.
+  3. Subsequent pages are fetched client-side as needed.
 - **Data Source**: Fetches top trending coins over the past 24 hours via CoinGecko’s API.
 - **Favorites Sidebar**: Displayed **only on desktop** to show the user's favorited tokens (if any).
 - **Public Key Handling**:
@@ -203,7 +205,6 @@ This section details how users navigate throughout the Orbit Track Frontend and 
   - Displays “Add to Favorites” or “Remove from Favorites” actions when a user is connected.
 
 ### `/favorites` (User Favorites)
-
 - **Mobile Navigation**: Accessible from the bottom navbar **only on mobile**.
 - **Displayed Data**: Shows only the user’s favorited tokens.
 - **Public Key Handling**:
@@ -214,6 +215,33 @@ This section details how users navigate throughout the Orbit Track Frontend and 
 - **Token Table**:
   - Lists the user’s favorited tokens (if any).
   - Allows adding/removing favorites (via `addFavoriteToken` or `removeFavoriteToken`) if the user is connected.
+
+---
+
+## Wallet Connection and Account Creation
+
+When a user connects their wallet on the `/trending` or `/favorites` page, the app:
+
+1. Calls `createUserWithPublicKey` to create (or retrieve) the user’s account in the database.
+2. Stores the public key in `localStorage` to avoid repeated creation calls.
+
+---
+
+## VirtualizedDataTable and Limitations
+
+- **Pagination & Infinite Scroll**:
+  - Supports pagination (up to 10 pages) to align with the CoinGecko API’s data limits.
+  - Uses infinite scroll to load additional pages.
+  - **Toast Notification**: If the user attempts to load more than 10 pages, a toast message appears indicating no more data is available.
+
+- **Large Data Sets**:
+  - Utilizes table virtualization to efficiently render large lists of tokens, keeping the UI responsive.
+
+- **Favorite Token Limit**:
+  - The `getMultipleTokens` query can only handle up to 30 tokens due to CoinGecko’s API limits.
+  - A user can therefore only favorite **up to 30 tokens**.
+  - **Toast Notification**: If the user tries to exceed the 30-token favorite limit, a toast message appears, preventing any further additions.
+
 
 ---
 

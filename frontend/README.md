@@ -179,29 +179,69 @@ frontend/
 
 ---
 
-## Architecture Overview
+## Routes and Application Flow
 
-### Routing
+This section details how users navigate throughout the Orbit Track Frontend and the logic that powers each route.
 
-This project uses the **Next.js App Router** within the `app/` directory. Each folder and file in `app/` can represent a route, with special files like:
+### `/` (Landing Page)
 
-- **page.tsx**: The main entry point for a route.
-- **layout.tsx**: Defines layout and composition for pages.
+- **Explore Button**: Always visible to guide users to explore trending tokens.
+- **Favorites Button**: Visible only on mobile **if** the user has connected their wallet.
+- **Purpose**: Serves as the main entry point to the application.
 
-### State Management
+### `/trending` (Trending Tokens)
 
-**Apollo Client** is configured in `lib/apollo-client.ts`. It manages state through GraphQL queries and mutations, providing a consistent data layer across components.
+- **Data Source**: Fetches top trending coins over the past 24 hours via CoinGecko’s API.
+- **Favorites Sidebar**: Displayed **only on desktop** to show the user's favorited tokens (if any).
+- **Public Key Handling**:
+  - If the user has connected their wallet, the application:
+    1. Attempts to create a new account in the database using `createUserWithPublicKey` (once per session, cached in `localStorage`).
+    2. Calls `favoritesByUser` to retrieve all token addresses favorited by the user.
+    3. Calls `getMultipleTokens` to load favorited token data for display in the desktop sidebar.
+- **Token Table**:
+  - Renders trending tokens by calling `trendingPools`. (No public key needed for this data.)
+  - Displays “Add to Favorites” or “Remove from Favorites” actions when a user is connected.
 
-### Data Flow
+### `/favorites` (User Favorites)
 
-- Components such as `TokenTable.tsx` use queries from `app/graphql/queries` to fetch data (e.g., trending tokens).
-- Data is displayed or manipulated in the UI.
-- When necessary, mutations (e.g., adding/removing favorite tokens) update the backend via GraphQL.
+- **Mobile Navigation**: Accessible from the bottom navbar **only on mobile**.
+- **Displayed Data**: Shows only the user’s favorited tokens.
+- **Public Key Handling**:
+  - If the user’s wallet is connected:
+    1. Calls `favoritesByUser` to retrieve the user’s favorited token addresses.
+    2. Calls `getMultipleTokens` to fetch detailed data for these tokens.
+  - Does **not** call `trendingPools` because only favorited tokens are needed.
+- **Token Table**:
+  - Lists the user’s favorited tokens (if any).
+  - Allows adding/removing favorites (via `addFavoriteToken` or `removeFavoriteToken`) if the user is connected.
 
-### Custom Hooks
+---
 
-- **useIsMobile**: A custom hook that determines if the user is on a mobile device.
-- **useToast**: A hook that manages toast notifications throughout the application.
+## Wallet Connection and Account Creation
+
+When a user connects their wallet on the `/trending` or `/favorites` page, the app:
+
+1. Calls `createUserWithPublicKey` to create (or retrieve) the user’s account in the database.
+2. Stores the public key in `localStorage` to avoid repeated creation calls.
+
+---
+
+## VirtualizedDataTable and Limitations
+
+- **Pagination & Infinite Scroll**:
+
+  - Supports pagination (up to 10 pages) to align with the CoinGecko API’s data limits.
+  - Uses infinite scroll to load additional pages.
+  - **Toast Notification**: If the user attempts to load more than 10 pages, a toast message appears indicating no more data is available.
+
+- **Large Data Sets**:
+
+  - Utilizes table virtualization to efficiently render large lists of tokens, keeping the UI responsive.
+
+- **Favorite Token Limit**:
+  - The `getMultipleTokens` query can only handle up to 30 tokens due to CoinGecko’s API limits.
+  - A user can therefore only favorite **up to 30 tokens**.
+  - **Toast Notification**: If the user tries to exceed the 30-token favorite limit, a toast message appears, preventing any further additions.
 
 ---
 

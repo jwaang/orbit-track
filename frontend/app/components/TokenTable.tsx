@@ -103,7 +103,8 @@ export default function TokenTable({ isFavorites, initialTrendingPools }: { isFa
 
   const filteredTokens = allTokens
     .filter((token: Token) =>
-      token.symbol.toLowerCase().includes(search.toLowerCase())
+      token.symbol.toLowerCase().includes(search.toLowerCase()) ||
+      token.address.toLowerCase().includes(search.toLowerCase())
     )
 
   const formatPrice = (price: number) => {
